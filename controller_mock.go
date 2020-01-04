@@ -2,9 +2,11 @@ package gousu
 
 // MockController for simply mocking IController
 type MockController struct {
+	NameFunc         func() string
 	StartFunc        func() error
 	StopFunc         func() error
 	HealthFunc       func() error
+	NameFuncCalled   int
 	StartFuncCalled  int
 	StopFuncCalled   int
 	HealthFuncCalled int
@@ -12,6 +14,13 @@ type MockController struct {
 
 // MockController must implement IController
 var _ IController = (*MockController)(nil)
+
+// Name calls NameFunc and increases NameFuncCalled
+func (c *MockController) Name() string {
+	c.NameFuncCalled++
+
+	return c.NameFunc()
+}
 
 // Start calls StartFunc and increases StartFuncCalled
 func (c *MockController) Start() error {
@@ -37,6 +46,9 @@ func (c *MockController) Health() error {
 // NewMockController creates a new initialized instance of MockController
 func NewMockController() *MockController {
 	return &MockController{
+		NameFunc: func() string {
+			return "mock"
+		},
 		StartFunc: func() error {
 			return nil
 		},

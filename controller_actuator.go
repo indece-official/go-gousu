@@ -7,6 +7,9 @@ import (
 	"github.com/namsral/flag"
 )
 
+// ActuatorControllerName is the name of the actuator controller for DI
+const ActuatorControllerName = "actuator"
+
 var (
 	actuatorHost = flag.String("actuator_host", "0.0.0.0", "")
 	actuatorPort = flag.Int("actuator_port", 9000, "")
@@ -21,6 +24,11 @@ type ActuatorController struct {
 
 // ActuatorController implement IController
 var _ IController = (*ActuatorController)(nil)
+
+// Name returns the name of the actuator controller from ActuatorControllerName
+func (c *ActuatorController) Name() string {
+	return ActuatorControllerName
+}
 
 // Start starts a HTTP-server for health-checks
 func (c *ActuatorController) Start() error {
@@ -67,7 +75,7 @@ func (c *ActuatorController) Stop() error {
 // NewActuatorController creates a new initilized instance of ActuatorController
 func NewActuatorController(services []IService) *ActuatorController {
 	return &ActuatorController{
-		log:      GetLogger("controller.actuator"),
+		log:      GetLogger(fmt.Sprintf("controller.%s", ActuatorControllerName)),
 		services: services,
 	}
 }

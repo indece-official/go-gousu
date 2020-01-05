@@ -1,6 +1,11 @@
 package gousu
 
-import "os"
+import (
+	"log"
+	"os"
+)
+
+var logFatalf = log.Fatalf
 
 // ContainsString checks if a slice of strings contains a string
 func ContainsString(s []string, e string) bool {

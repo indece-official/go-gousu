@@ -73,9 +73,11 @@ func (c *ActuatorController) Stop() error {
 }
 
 // NewActuatorController creates a new initilized instance of ActuatorController
-func NewActuatorController(services []IService) *ActuatorController {
+func NewActuatorController(ctx IContext) IController {
 	return &ActuatorController{
 		log:      GetLogger(fmt.Sprintf("controller.%s", ActuatorControllerName)),
-		services: services,
+		services: ctx.GetServices(),
 	}
 }
+
+var _ (ControllerFactory) = NewActuatorController

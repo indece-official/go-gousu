@@ -1,15 +1,13 @@
 package gousu
 
-import (
-	"log"
-)
-
 // IContext defines the interface of Context used for dependency injection (DI)
 type IContext interface {
 	RegisterService(service IService)
 	RegisterController(controller IController)
 	GetService(name string) IService
+	GetServices() []IService
 	GetController(name string) IController
+	GetControllers() []IController
 }
 
 // Context is used for dependency injection (DI) from Runner to services and controllers
@@ -27,13 +25,13 @@ func (c *Context) RegisterService(service IService) {
 	name := service.Name()
 
 	if name == "" {
-		log.Fatalf("Error registering service %v: empty name", service)
+		logFatalf("Error registering service %v: empty name", service)
 
 		return
 	}
 
 	if _, ok := c.services[name]; ok {
-		log.Fatalf("Error registering service %v: name %s already in use", service, name)
+		logFatalf("Error registering service %v: name %s already in use", service, name)
 
 		return
 	}
@@ -48,13 +46,13 @@ func (c *Context) RegisterController(controller IController) {
 	name := controller.Name()
 
 	if name == "" {
-		log.Fatalf("Error registering controller %v: empty name", controller)
+		logFatalf("Error registering controller %v: empty name", controller)
 
 		return
 	}
 
 	if _, ok := c.controllers[name]; ok {
-		log.Fatalf("Error registering controller %v: name %s already in use", controller, name)
+		logFatalf("Error registering controller %v: name %s already in use", controller, name)
 
 		return
 	}
@@ -69,12 +67,25 @@ func (c *Context) GetService(name string) IService {
 	service, ok := c.services[name]
 
 	if !ok {
-		log.Fatalf("Error getting service %s: unknown service", name)
+		logFatalf("Error getting service %s: unknown service", name)
 
 		return nil
 	}
 
 	return service
+}
+
+// GetServices returns a list of all registered services
+func (c *Context) GetServices() []IService {
+	services := make([]IService, len(c.services))
+
+	i := 0
+	for _, service := range c.services {
+		services[i] = service
+		i++
+	}
+
+	return services
 }
 
 // GetController returns a controller by its name
@@ -84,12 +95,25 @@ func (c *Context) GetController(name string) IController {
 	controller, ok := c.controllers[name]
 
 	if !ok {
-		log.Fatalf("Error getting controller %s: unknown controller", name)
+		logFatalf("Error getting controller %s: unknown controller", name)
 
 		return nil
 	}
 
 	return controller
+}
+
+// GetControllers returns a list of all registered controllers
+func (c *Context) GetControllers() []IController {
+	controllers := make([]IController, len(c.controllers))
+
+	i := 0
+	for _, controller := range c.controllers {
+		controllers[i] = controller
+		i++
+	}
+
+	return controllers
 }
 
 // NewContext creates a new initialized instance of Context

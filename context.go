@@ -4,16 +4,19 @@ package gousu
 type IContext interface {
 	RegisterService(service IService)
 	RegisterController(controller IController)
+	RegisterUIController(uiController IUIController)
 	GetService(name string) IService
 	GetServices() []IService
 	GetController(name string) IController
 	GetControllers() []IController
+	GetUIController() IUIController
 }
 
 // Context is used for dependency injection (DI) from Runner to services and controllers
 type Context struct {
-	services    map[string]IService
-	controllers map[string]IController
+	services     map[string]IService
+	controllers  map[string]IController
+	uiController IUIController
 }
 
 var _ (IContext) = (*Context)(nil)
@@ -58,6 +61,27 @@ func (c *Context) RegisterController(controller IController) {
 	}
 
 	c.controllers[name] = controller
+}
+
+// RegisterUIController registers a UI-Controller
+//
+// Causes a fatal failure if an UI-Controller was already registered
+func (c *Context) RegisterUIController(uiController IUIController) {
+	name := uiController.Name()
+
+	if name == "" {
+		logFatalf("Error registering UI-Controller %v: empty name", uiController)
+
+		return
+	}
+
+	if c.uiController != nil {
+		logFatalf("Error registering an UI-Controller %v", c.uiController.Name())
+
+		return
+	}
+
+	c.uiController = uiController
 }
 
 // GetService returns a service by its name
@@ -116,10 +140,16 @@ func (c *Context) GetControllers() []IController {
 	return controllers
 }
 
+// GetUIController returns the registered UI-Controller or nil
+func (c *Context) GetUIController() IUIController {
+	return c.uiController
+}
+
 // NewContext creates a new initialized instance of Context
 func NewContext() *Context {
 	return &Context{
-		services:    map[string]IService{},
-		controllers: map[string]IController{},
+		services:     map[string]IService{},
+		controllers:  map[string]IController{},
+		uiController: nil,
 	}
 }

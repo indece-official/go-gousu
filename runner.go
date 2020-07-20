@@ -12,6 +12,7 @@ import (
 type IRunner interface {
 	CreateService(serviceFactory ServiceFactory)
 	CreateController(controllerFactory ControllerFactory)
+	CreateUIController(uiControllerFactory UIControllerFactory)
 	AwaitReady()
 	Run()
 	Kill()
@@ -48,6 +49,14 @@ func (r *Runner) CreateController(controllerFactory ControllerFactory) {
 	r.controllersOrder = append(r.controllersOrder, controller.Name())
 }
 
+// CreateUIController creates a new instance of an UI-Controller using its factory function
+// and registers it in the context
+func (r *Runner) CreateUIController(uiControllerFactory UIControllerFactory) {
+	uiController := uiControllerFactory(r.ctx)
+
+	r.ctx.RegisterUIController(uiController)
+}
+
 // Run is the blocking core function starting all services & controllers, waiting
 // for a SIGINT or SIGTERM signal an the stopping all
 func (r *Runner) Run() {
@@ -69,10 +78,33 @@ func (r *Runner) Run() {
 		r.log.Infof("Controller '%s' started", name)
 	}
 
+	uiController := r.ctx.GetUIController()
+
+	if uiController != nil {
+		r.log.Infof("Starting UI-Controller '%s' ...", uiController.Name())
+
+		CheckError(uiController.Start())
+
+		r.log.Infof("UI-Controller '%s' started", uiController.Name())
+	}
+
 	r.sigReady <- true
-	<-r.sigTerm
+
+	if uiController != nil {
+		uiController.Run(r.sigTerm)
+	} else {
+		<-r.sigTerm
+	}
 
 	r.log.Infof("Stopping ...")
+
+	if uiController != nil {
+		r.log.Infof("Stopping UI-Controller '%s' ...", uiController.Name())
+
+		CheckError(uiController.Stop())
+
+		r.log.Infof("UI-Controller '%s' stopped", uiController.Name())
+	}
 
 	for i := len(r.controllersOrder) - 1; i >= 0; i-- {
 		name := r.controllersOrder[i]
@@ -111,8 +143,10 @@ func (r *Runner) Kill() {
 func NewRunner(projectName string, version string) IRunner {
 	sigTerm := make(chan os.Signal, 1)
 
-	flag.String(flag.DefaultConfigFlagname, "", "Path to config file")
-	flag.Parse()
+	if !flag.Parsed() {
+		flag.String(flag.DefaultConfigFlagname, "", "Path to config file")
+		flag.Parse()
+	}
 
 	signal.Notify(sigTerm, syscall.SIGINT, syscall.SIGTERM)
 

@@ -1,6 +1,9 @@
 package gousu
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 type testService struct {
 }
@@ -33,10 +36,44 @@ func newTestController(ctx IContext) IController {
 	}
 }
 
+type testUIController struct {
+	testService *testService
+}
+
+var _ (IUIController) = (*testUIController)(nil)
+
+func (c *testUIController) Name() string  { return "test" }
+func (c *testUIController) Start() error  { return nil }
+func (c *testUIController) Health() error { return nil }
+func (c *testUIController) Run(sigTerm chan os.Signal) error {
+	<-sigTerm
+
+	return nil
+}
+func (c *testUIController) Stop() error { return nil }
+
+func newTestUIController(ctx IContext) IUIController {
+	return &testUIController{
+		testService: ctx.GetService("test").(*testService),
+	}
+}
+
 func TestRunner(t *testing.T) {
 	runner := NewRunner("example", "1.0.0")
 	runner.CreateService(newTestService)
 	runner.CreateController(newTestController)
+
+	go runner.Run()
+
+	runner.AwaitReady()
+	runner.Kill()
+}
+
+func TestRunnerWithUIController(t *testing.T) {
+	runner := NewRunner("example", "1.0.0")
+	runner.CreateService(newTestService)
+	runner.CreateController(newTestController)
+	runner.CreateUIController(newTestUIController)
 
 	go runner.Run()
 

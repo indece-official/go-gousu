@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	loglevel = flag.String("loglevel", "INFO", "")
+	loglevel    = flag.String("loglevel", "INFO", "")
+	logDisabled = false
 )
 
 var (
@@ -55,6 +56,11 @@ func (l *Log) RecordfX(key, value string, args ...interface{}) *Log {
 
 var parentLogger *Log
 
+// DisableLogger disabled the logger (must be called before InitLogger())
+func DisableLogger() {
+	logDisabled = true
+}
+
 // InitLogger initializes the parent logger and sets the project's name
 func InitLogger(projectName string) {
 	level, ok := mapLevels[strings.ToUpper(*loglevel)]
@@ -62,7 +68,13 @@ func InitLogger(projectName string) {
 		level = bunyan.INFO
 	}
 
-	sink := bunyan.FilterSink(level, bunyan.StdoutSink())
+	var sink bunyan.Sink
+
+	if logDisabled {
+		sink = bunyan.NilSink()
+	} else {
+		sink = bunyan.FilterSink(level, bunyan.StdoutSink())
+	}
 
 	parentLogger = &Log{bunyan.NewStdLogger(projectName, sink)}
 }

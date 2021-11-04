@@ -10,6 +10,7 @@ import (
 
 var (
 	loglevel    = flag.String("loglevel", "INFO", "")
+	siemEnabled = flag.Bool("siem_enabled", true, "")
 	logDisabled = false
 )
 
@@ -31,6 +32,40 @@ var (
 // variable LOGLEVEL
 type Log struct {
 	bunyan.Log
+}
+
+// SiemEvent logs an siem event
+func (l *Log) SiemEvent(event *SiemEvent, msg string, args ...interface{}) {
+	if !*siemEnabled {
+		return
+	}
+
+	log := l.Log.
+		Record(SiemEventFieldType, event.Type).
+		Record(SiemEventFieldLevel, event.Level())
+
+	if event.UserIdentifier.Valid {
+		log = log.Record(SiemEventFieldUserIdentifier, event.UserIdentifier)
+	}
+
+	if event.SourceIP.Valid {
+		log = log.Record(SiemEventFieldSourceIP, event.SourceIP)
+	}
+
+	if event.SourceRealIP.Valid {
+		log = log.Record(SiemEventFieldSourceRealIP, event.SourceRealIP)
+	}
+
+	switch event.Level() {
+	case SiemEventLevelInfo:
+		log.Infof(msg, args...)
+	case SiemEventLevelWarn:
+		log.Warnf(msg, args...)
+	case SiemEventLevelCritical:
+		log.Errorf(msg, args...)
+	default:
+		log.Errorf(msg, args...)
+	}
 }
 
 // ErrorfX logs an error and returns it
@@ -77,6 +112,10 @@ func InitLogger(projectName string) {
 	}
 
 	parentLogger = &Log{bunyan.NewStdLogger(projectName, sink)}
+
+	if !*siemEnabled {
+		parentLogger.Warnf("SIEM-Event logging is disabled")
+	}
 }
 
 // GetLogger returns a logger for a specific component

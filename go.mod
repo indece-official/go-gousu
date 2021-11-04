@@ -7,4 +7,5 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/namsral/flag v1.7.4-pre
 	github.com/stretchr/testify v1.4.0
+	gopkg.in/guregu/null.v4 v4.0.0 // indirect
 )

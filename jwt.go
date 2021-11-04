@@ -12,13 +12,16 @@ import (
 )
 
 var (
-	jwtPublicKeyFile = flag.String("jwt_publickey", "", "")
+	jwtPublicKeyFile            = flag.String("jwt_publickey", "", "JWT-Public-Key for Verifier")
+	jwtVerifyAudience           = flag.String("jwt_verify_audience", "", "JWT-Audience for Verifier")
+	jwtVerifyAlgorithm          = flag.String("jwt_verify_algorithm", "", "JWT-Algorithm for Verifier")
+	jwtVerifyNoSuccessSiemEvent = flag.Bool("jwt_verify_no_success_siem_event", true, "Don't log success siem event from JWT-Verifier")
 )
 
 // IJWTVerifier defines the interface of JWTVerifier
 type IJWTVerifier interface {
 	Verify(w http.ResponseWriter, r *http.Request, groups []string) (*JWTCustomClaims, error)
-	VerifyWithCustomClaims(w http.ResponseWriter, r *http.Request, groups []string, claims jwt.Claims) (jwt.Claims, error)
+	VerifyWithCustomClaims(w http.ResponseWriter, r *http.Request, groups []string, claims IJWTCustomClaims) (IJWTCustomClaims, error)
 }
 
 // JWTVerifier provides a simple JWT verification utility
@@ -32,12 +35,37 @@ type JWTVerifier struct {
 
 var _ IJWTVerifier = (*JWTVerifier)(nil)
 
+// IJWTCustomClaims definies the generic interface for custom jwt claims
+type IJWTCustomClaims interface {
+	jwt.Claims
+	GetUserID() int64
+	GetGroups() []string
+	GetAudience() string
+}
+
 // JWTCustomClaims definies the format of the JWT payload
 type JWTCustomClaims struct {
 	jwt.StandardClaims
-	UserID int      `json:"user_id"`
+	UserID int64    `json:"user_id"`
 	Groups []string `json:"groups"`
 }
+
+// GetUserID returns the UserID
+func (j *JWTCustomClaims) GetUserID() int64 {
+	return j.UserID
+}
+
+// GetGroups returns all Groups
+func (j *JWTCustomClaims) GetGroups() []string {
+	return j.Groups
+}
+
+// GetAudience returns the audience
+func (j *JWTCustomClaims) GetAudience() string {
+	return j.Audience
+}
+
+var _ IJWTCustomClaims = (*JWTCustomClaims)(nil)
 
 func (j *JWTVerifier) load() error {
 	var err error
@@ -57,15 +85,39 @@ func (j *JWTVerifier) load() error {
 	return nil
 }
 
-// Verify validates the JWT from the authorization header and checks if the
+func (j *JWTVerifier) generateSiemEvent(r *http.Request, eventType SiemEventType, claims IJWTCustomClaims) *SiemEvent {
+	evt := &SiemEvent{}
+
+	evt.Type = eventType
+	evt.SourceIP.Scan(r.RemoteAddr)
+	evt.SourceRealIP.Scan(r.Header.Get("X-Real-IP"))
+
+	if claims != nil {
+		evt.UserIdentifier.Scan(fmt.Sprintf("userid:%d", claims.GetUserID()))
+	}
+
+	return evt
+}
+
+// VerifyWithCustomClaims validates the JWT from the authorization header and checks if the
 // required groups are fullfiled
 //
 // If the authorization fails it sends a 403 and returns
-func (j *JWTVerifier) VerifyWithCustomClaims(w http.ResponseWriter, r *http.Request, groups []string, claims jwt.Claims) (jwt.Claims, error) {
+func (j *JWTVerifier) VerifyWithCustomClaims(w http.ResponseWriter, r *http.Request, groups []string, claims IJWTCustomClaims) (IJWTCustomClaims, error) {
 	authorizationHeader := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
 
 	// Check if valid Bearer-Header
 	if len(authorizationHeader) != 2 || authorizationHeader[1] == "" {
+		j.log.SiemEvent(
+			j.generateSiemEvent(
+				r,
+				SiemEventTypeAuthenticationFailed,
+				nil,
+			),
+			"Invalid or empty authorization header: %s",
+			r.Header.Get("Authorization"),
+		)
+
 		return nil, fmt.Errorf("invalid authorization header")
 	}
 
@@ -80,15 +132,109 @@ func (j *JWTVerifier) VerifyWithCustomClaims(w http.ResponseWriter, r *http.Requ
 	switch err.(type) {
 	case nil: // no error
 		if !token.Valid { // but may still be invalid
+			j.log.SiemEvent(
+				j.generateSiemEvent(
+					r,
+					SiemEventTypeAuthenticationFailedAttact,
+					nil,
+				),
+				"Invalid jwt token: %s",
+				authorizationHeader[1],
+			)
+
 			return nil, fmt.Errorf("Authorization failed: invalid token")
 		}
 
-		customClaims := token.Claims.(*JWTCustomClaims)
+		err = token.Claims.Valid()
+		if err != nil {
+			j.log.SiemEvent(
+				j.generateSiemEvent(
+					r,
+					SiemEventTypeAuthenticationFailedAttact,
+					nil,
+				),
+				"Invalid jwt claims in token %s: %s",
+				authorizationHeader[1],
+				err,
+			)
+
+			return nil, fmt.Errorf("Authorization failed: invalid claims in token: %s", err)
+		}
+
+		if token.Method.Alg() != *jwtVerifyAlgorithm {
+			j.log.SiemEvent(
+				j.generateSiemEvent(
+					r,
+					SiemEventTypeAuthenticationFailedAttact,
+					nil,
+				),
+				"Invalid jwt token: %s - missmatching algorithm: got %s, expected %s",
+				authorizationHeader[1],
+				token.Method.Alg(),
+				*jwtVerifyAlgorithm,
+			)
+
+			return nil, fmt.Errorf("Missmatching algorithm: got %s, expected %s", token.Method.Alg(), *jwtVerifyAlgorithm)
+		}
+
+		customClaims, ok := token.Claims.(IJWTCustomClaims)
+		if !ok {
+			j.log.SiemEvent(
+				j.generateSiemEvent(
+					r,
+					SiemEventTypeAuthenticationFailedAttact,
+					nil,
+				),
+				"Invalid jwt token: %s - casting jwt custom claims failed",
+				*jwtVerifyAlgorithm,
+			)
+
+			return nil, fmt.Errorf("Casting jwt custom claims failed")
+		}
+
+		if customClaims.GetAudience() != *jwtVerifyAudience {
+			j.log.SiemEvent(
+				j.generateSiemEvent(
+					r,
+					SiemEventTypeAuthenticationFailedAttact,
+					nil,
+				),
+				"Invalid jwt token: %s - missmatching audience: got %s, expected %s",
+				authorizationHeader[1],
+				customClaims.GetAudience(),
+				*jwtVerifyAudience,
+			)
+
+			return nil, fmt.Errorf("Missmatching audience: got %s, expected %s", customClaims.GetAudience(), *jwtVerifyAudience)
+		}
 
 		for i := range groups {
-			if !ContainsString(customClaims.Groups, groups[i]) {
+			if !ContainsString(customClaims.GetGroups(), groups[i]) {
+				j.log.SiemEvent(
+					j.generateSiemEvent(
+						r,
+						SiemEventTypeAuthenticationFailedAttact,
+						nil,
+					),
+					"Authorization failed: missing group in token %s: %s",
+					authorizationHeader[1],
+					groups[i],
+				)
+
 				return nil, fmt.Errorf("Authorization failed: missing group %s", groups[i])
 			}
+		}
+
+		if !*jwtVerifyNoSuccessSiemEvent {
+			j.log.SiemEvent(
+				j.generateSiemEvent(
+					r,
+					SiemEventTypeAuthenticationSuccess,
+					customClaims,
+				),
+				"JWT-Verification succeded for user %d",
+				customClaims.GetUserID(),
+			)
 		}
 
 		return customClaims, nil
@@ -98,19 +244,50 @@ func (j *JWTVerifier) VerifyWithCustomClaims(w http.ResponseWriter, r *http.Requ
 
 		switch vErr.Errors {
 		case jwt.ValidationErrorExpired:
+			j.log.SiemEvent(
+				j.generateSiemEvent(
+					r,
+					SiemEventTypeAuthenticationFailed,
+					nil,
+				),
+				"Authorization failed: jwt expired: %s",
+				authorizationHeader[1],
+			)
+
 			return nil, fmt.Errorf("Authorization failed: JWT expired")
 
 		default:
+			j.log.SiemEvent(
+				j.generateSiemEvent(
+					r,
+					SiemEventTypeAuthenticationFailedAttact,
+					nil,
+				),
+				"Authorization failed: invalid jwt %s: %s",
+				authorizationHeader[1],
+				err,
+			)
+
 			return nil, fmt.Errorf("Authorization failed: invalid JWT: %s", err)
 		}
 
 	default: // something else went wrong
-		return nil, fmt.Errorf("Authorization failed: %s", err)
+		j.log.SiemEvent(
+			j.generateSiemEvent(
+				r,
+				SiemEventTypeAuthenticationFailedAttact,
+				nil,
+			),
+			"Authorization failed for token %s: %s",
+			authorizationHeader[1],
+			err,
+		)
 
+		return nil, fmt.Errorf("Authorization failed: %s", err)
 	}
 }
 
-// VerifyWithCustomClaims validates the JWT from the authorization header and checks if the
+// Verify validates the JWT from the authorization header and checks if the
 // required groups are fullfiled
 //
 // If the authorization fails it sends a 403 and returns
@@ -132,7 +309,7 @@ func NewJWTVerifier() (*JWTVerifier, error) {
 
 	err := j.load()
 	if err != nil {
-		j.log.Fatalf("Error initializing jwt utiliy: %s", err)
+		j.log.Errorf("Error initializing jwt utiliy: %s", err)
 		return nil, err
 	}
 

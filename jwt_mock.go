@@ -1,11 +1,17 @@
 package gousu
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/dgrijalva/jwt-go"
+)
 
 // MockJWTVerifier provides a simple mock for JWTVerifier
 type MockJWTVerifier struct {
-	VerifyFunc       func(w http.ResponseWriter, r *http.Request, groups []string) (*JWTCustomClaims, bool)
-	VerifyFuncCalled int
+	VerifyFunc                       func(w http.ResponseWriter, r *http.Request, groups []string) (*JWTCustomClaims, bool)
+	VerifyFuncCalled                 int
+	VerifyWithCustomClaimsFunc       func(w http.ResponseWriter, r *http.Request, groups []string, claims jwt.Claims) (jwt.Claims, bool)
+	VerifyWithCustomClaimsFuncCalled int
 }
 
 var _ IJWTVerifier = (*JWTVerifier)(nil)
@@ -17,12 +23,21 @@ func (m *MockJWTVerifier) Verify(w http.ResponseWriter, r *http.Request, groups 
 	return m.VerifyFunc(w, r, groups)
 }
 
+// VerifyWithCustomClaims calls VerifyWithCustomClaimsFunc and increases VerifyWithCustomClaimsFuncCalled
+func (m *MockJWTVerifier) VerifyWithCustomClaims(w http.ResponseWriter, r *http.Request, groups []string, claims jwt.Claims) (jwt.Claims, bool) {
+	m.VerifyWithCustomClaimsFuncCalled++
+
+	return m.VerifyWithCustomClaimsFunc(w, r, groups, claims)
+}
+
 // NewMockJWTVerifier creates a new initialized instance of MockJWTVerifier
 func NewMockJWTVerifier() *MockJWTVerifier {
 	return &MockJWTVerifier{
 		VerifyFunc: func(w http.ResponseWriter, r *http.Request, groups []string) (*JWTCustomClaims, bool) {
 			return &JWTCustomClaims{}, true
 		},
-		VerifyFuncCalled: 0,
+		VerifyWithCustomClaimsFunc: func(w http.ResponseWriter, r *http.Request, groups []string, claims jwt.Claims) (jwt.Claims, bool) {
+			return &JWTCustomClaims{}, true
+		},
 	}
 }

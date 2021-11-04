@@ -17,7 +17,8 @@ var (
 
 // IJWTVerifier defines the interface of JWTVerifier
 type IJWTVerifier interface {
-	Verify(w http.ResponseWriter, r *http.Request, groups []string) (*JWTCustomClaims, bool)
+	Verify(w http.ResponseWriter, r *http.Request, groups []string) (*JWTCustomClaims, error)
+	VerifyWithCustomClaims(w http.ResponseWriter, r *http.Request, groups []string, claims jwt.Claims) (jwt.Claims, error)
 }
 
 // JWTVerifier provides a simple JWT verification utility
@@ -60,18 +61,16 @@ func (j *JWTVerifier) load() error {
 // required groups are fullfiled
 //
 // If the authorization fails it sends a 403 and returns
-func (j *JWTVerifier) Verify(w http.ResponseWriter, r *http.Request, groups []string) (*JWTCustomClaims, bool) {
+func (j *JWTVerifier) VerifyWithCustomClaims(w http.ResponseWriter, r *http.Request, groups []string, claims jwt.Claims) (jwt.Claims, error) {
 	authorizationHeader := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
 
 	// Check if valid Bearer-Header
 	if len(authorizationHeader) != 2 || authorizationHeader[1] == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(w, "Invalid authorization header")
-		return nil, false
+		return nil, fmt.Errorf("invalid authorization header")
 	}
 
 	// validate the token
-	token, err := jwt.ParseWithClaims(authorizationHeader[1], &JWTCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(authorizationHeader[1], claims, func(token *jwt.Token) (interface{}, error) {
 		// since we only use the one private key to sign the tokens,
 		// we also only use its public counter part to verify
 		return j.publicKey, nil
@@ -81,53 +80,47 @@ func (j *JWTVerifier) Verify(w http.ResponseWriter, r *http.Request, groups []st
 	switch err.(type) {
 	case nil: // no error
 		if !token.Valid { // but may still be invalid
-			j.log.Debugf("Authorization failed: invalid token")
-
-			w.WriteHeader(http.StatusUnauthorized)
-			fmt.Fprintln(w, "Authorization failed")
-			return nil, false
+			return nil, fmt.Errorf("Authorization failed: invalid token")
 		}
 
-		claims := token.Claims.(*JWTCustomClaims)
+		customClaims := token.Claims.(*JWTCustomClaims)
 
 		for i := range groups {
-			if !ContainsString(claims.Groups, groups[i]) {
-				j.log.Debugf("Authorization failed: missing group %s", groups[i])
-
-				w.WriteHeader(http.StatusUnauthorized)
-				fmt.Fprintln(w, "Authorization failed")
-				return nil, false
+			if !ContainsString(customClaims.Groups, groups[i]) {
+				return nil, fmt.Errorf("Authorization failed: missing group %s", groups[i])
 			}
 		}
 
-		return claims, true
+		return customClaims, nil
 
 	case *jwt.ValidationError: // something was wrong during the validation
 		vErr := err.(*jwt.ValidationError)
 
 		switch vErr.Errors {
 		case jwt.ValidationErrorExpired:
-			j.log.Debugf("Authorization failed: JWT expired")
-
-			w.WriteHeader(http.StatusUnauthorized)
-			fmt.Fprintln(w, "Authorization failed")
-			return nil, false
+			return nil, fmt.Errorf("Authorization failed: JWT expired")
 
 		default:
-			j.log.Debugf("Authorization failed: invalid JWT: %s", err)
-
-			w.WriteHeader(http.StatusUnauthorized)
-			fmt.Fprintln(w, "Authorization failed")
-			return nil, false
+			return nil, fmt.Errorf("Authorization failed: invalid JWT: %s", err)
 		}
 
 	default: // something else went wrong
-		j.log.Debugf("Authorization failed: %s", err)
+		return nil, fmt.Errorf("Authorization failed: %s", err)
 
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, "Internal server error")
-		return nil, false
 	}
+}
+
+// VerifyWithCustomClaims validates the JWT from the authorization header and checks if the
+// required groups are fullfiled
+//
+// If the authorization fails it sends a 403 and returns
+func (j *JWTVerifier) Verify(w http.ResponseWriter, r *http.Request, groups []string) (*JWTCustomClaims, error) {
+	claims, err := j.VerifyWithCustomClaims(w, r, groups, &JWTCustomClaims{})
+	if err != nil {
+		return nil, err
+	}
+
+	return claims.(*JWTCustomClaims), nil
 }
 
 // NewJWTVerifier creates a new initilized instance of JWTVerifier

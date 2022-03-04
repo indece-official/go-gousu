@@ -1,10 +1,11 @@
-package gousu
+package logger
 
 import (
 	"fmt"
 	"strings"
 
 	"github.com/chakrit/go-bunyan"
+	"github.com/indece-official/go-gousu/gousu/siem"
 	"github.com/namsral/flag"
 )
 
@@ -35,33 +36,33 @@ type Log struct {
 }
 
 // SiemEvent logs an siem event
-func (l *Log) SiemEvent(event *SiemEvent, msg string, args ...interface{}) {
+func (l *Log) SiemEvent(event *siem.Event, msg string, args ...interface{}) {
 	if !*siemEnabled {
 		return
 	}
 
 	log := l.Log.
-		Record(SiemEventFieldType, event.Type).
-		Record(SiemEventFieldLevel, event.Level())
+		Record(siem.EventFieldType, event.Type).
+		Record(siem.EventFieldLevel, event.Level())
 
 	if event.UserIdentifier.Valid {
-		log = log.Record(SiemEventFieldUserIdentifier, event.UserIdentifier)
+		log = log.Record(siem.EventFieldUserIdentifier, event.UserIdentifier)
 	}
 
 	if event.SourceIP.Valid {
-		log = log.Record(SiemEventFieldSourceIP, event.SourceIP)
+		log = log.Record(siem.EventFieldSourceIP, event.SourceIP)
 	}
 
 	if event.SourceRealIP.Valid {
-		log = log.Record(SiemEventFieldSourceRealIP, event.SourceRealIP)
+		log = log.Record(siem.EventFieldSourceRealIP, event.SourceRealIP)
 	}
 
 	switch event.Level() {
-	case SiemEventLevelInfo:
+	case siem.EventLevelInfo:
 		log.Infof(msg, args...)
-	case SiemEventLevelWarn:
+	case siem.EventLevelWarn:
 		log.Warnf(msg, args...)
-	case SiemEventLevelCritical:
+	case siem.EventLevelCritical:
 		log.Errorf(msg, args...)
 	default:
 		log.Errorf(msg, args...)

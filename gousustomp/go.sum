@@ -1,0 +1,12 @@
+github.com/chakrit/go-bunyan v0.0.0-20140303180041-5a9b5e7b1765 h1:HUh++FEzizTfAmUDGMWSZaa8rrh2o4/Mley/RdNjHn8=
+github.com/chakrit/go-bunyan v0.0.0-20140303180041-5a9b5e7b1765/go.mod h1:m9evZ3bBCZccBQE5sSXJHmUStUkXIoA3iLjyBmSzRwA=
+github.com/go-stomp/stomp/v3 v3.0.3 h1:7YQGJCDMkbA05Rw8dS00LxwU1mhzEHS69gMlPjMZGDk=
+github.com/go-stomp/stomp/v3 v3.0.3/go.mod h1:jTrybHBK20jPdM9iyh65m6GusX6aMf7atfEFZ1nIcgc=
+github.com/kr/pretty v0.2.1/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfnI=
+github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
+github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
+github.com/namsral/flag v1.7.4-pre h1:b2ScHhoCUkbsq0d2C15Mv+VU8bl8hAXV8arnWiOHNZs=
+github.com/namsral/flag v1.7.4-pre/go.mod h1:OXldTctbM6SWH1K899kPZcf65KxJiD7MsceFUpB5yDo=
+gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c/go.mod h1:JHkPIbrfpd72SG/EVd6muEfDQjcINNoR0C8j2r3qZ4Q=
+gopkg.in/guregu/null.v4 v4.0.0 h1:1Wm3S1WEA2I26Kq+6vcW+w0gcDo44YKYD7YIEJNHDjg=
+gopkg.in/guregu/null.v4 v4.0.0/go.mod h1:YoQhUrADuG3i9WqesrCmpNRwm1ypAgSHYqoOcTu/JrI=

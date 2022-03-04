@@ -1,6 +1,6 @@
 package example
 
-import "github.com/indece-official/go-gousu"
+import "github.com/indece-official/go-gousu/gousu"
 
 type TestService struct {
 }

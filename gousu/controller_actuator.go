@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/indece-official/go-gousu/gousu/logger"
 	"github.com/namsral/flag"
 )
 
@@ -18,7 +19,7 @@ var (
 // ActuatorController is a controller running in a separate thread providing an health endpoint
 type ActuatorController struct {
 	services []IService
-	log      *Log
+	log      *logger.Log
 	error    error
 }
 
@@ -75,7 +76,7 @@ func (c *ActuatorController) Stop() error {
 // NewActuatorController creates a new initilized instance of ActuatorController
 func NewActuatorController(ctx IContext) IController {
 	return &ActuatorController{
-		log:      GetLogger(fmt.Sprintf("controller.%s", ActuatorControllerName)),
+		log:      logger.GetLogger(fmt.Sprintf("controller.%s", ActuatorControllerName)),
 		services: ctx.GetServices(),
 	}
 }

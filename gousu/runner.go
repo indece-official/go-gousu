@@ -5,6 +5,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/indece-official/go-gousu/gousu/logger"
 	"github.com/namsral/flag"
 )
 
@@ -24,7 +25,7 @@ type Runner struct {
 	ctx              IContext
 	sigReady         chan bool
 	sigTerm          chan os.Signal
-	log              *Log
+	log              *logger.Log
 	servicesOrder    []string
 	controllersOrder []string
 	projectName      string
@@ -150,9 +151,9 @@ func NewRunner(projectName string, version string) IRunner {
 
 	signal.Notify(sigTerm, syscall.SIGINT, syscall.SIGTERM)
 
-	InitLogger(projectName)
+	logger.InitLogger(projectName)
 
-	log := GetLogger("main")
+	log := logger.GetLogger("main")
 
 	log.Infof("%s %s", projectName, version)
 

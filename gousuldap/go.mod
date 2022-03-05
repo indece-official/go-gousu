@@ -4,7 +4,7 @@ go 1.17
 
 replace github.com/indece-official/go-gousu/v2 => ../
 
-require github.com/indece-official/go-gousu/v2 v2.0.0
+require github.com/indece-official/go-gousu/v2 v2.0.1
 
 require (
 	github.com/Azure/go-ntlmssp v0.0.0-20200615164410-66371956d46c // indirect

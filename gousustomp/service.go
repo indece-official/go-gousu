@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/go-stomp/stomp/v3"
-	"github.com/indece-official/go-gousu/gousu"
-	"github.com/indece-official/go-gousu/gousu/logger"
+	"github.com/indece-official/go-gousu/v2/gousu"
+	"github.com/indece-official/go-gousu/v2/gousu/logger"
 )
 
 const ServiceName = "stomp"

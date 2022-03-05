@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/indece-official/go-gousu/gousu/logger"
+	"github.com/indece-official/go-gousu/v2/gousu/logger"
 )
 
 type contextKey string

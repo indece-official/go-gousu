@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/chakrit/go-bunyan"
-	"github.com/indece-official/go-gousu/gousu/siem"
+	"github.com/indece-official/go-gousu/v2/gousu/siem"
 	"github.com/namsral/flag"
 )
 

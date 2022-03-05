@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/indece-official/go-gousu/gousu/logger"
+	"github.com/indece-official/go-gousu/v2/gousu/logger"
 )
 
 type ResponseError struct {

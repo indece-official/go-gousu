@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-redsync/redsync/v4"
 	"github.com/gomodule/redigo/redis"
-	"github.com/indece-official/go-gousu/gousu"
+	"github.com/indece-official/go-gousu/v2/gousu"
 )
 
 // MockService for simply mocking IService

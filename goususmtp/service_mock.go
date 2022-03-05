@@ -1,6 +1,6 @@
 package goususmtp
 
-import "github.com/indece-official/go-gousu/gousu"
+import "github.com/indece-official/go-gousu/v2/gousu"
 
 // MockService for simply mocking IService
 type MockService struct {

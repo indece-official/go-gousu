@@ -5,7 +5,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/indece-official/go-gousu/gousu/logger"
+	"github.com/indece-official/go-gousu/v2/gousu/logger"
 	"github.com/namsral/flag"
 )
 

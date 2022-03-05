@@ -2,7 +2,7 @@ package gousukafka
 
 import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/indece-official/go-gousu/gousu"
+	"github.com/indece-official/go-gousu/v2/gousu"
 )
 
 // MockService for simply mocking IService

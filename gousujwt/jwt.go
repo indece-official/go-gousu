@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/indece-official/go-gousu/gousu"
-	"github.com/indece-official/go-gousu/gousu/logger"
-	"github.com/indece-official/go-gousu/gousu/siem"
+	"github.com/indece-official/go-gousu/v2/gousu"
+	"github.com/indece-official/go-gousu/v2/gousu/logger"
+	"github.com/indece-official/go-gousu/v2/gousu/siem"
 	"github.com/namsral/flag"
 )
 

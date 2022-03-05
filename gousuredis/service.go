@@ -7,8 +7,8 @@ import (
 	"github.com/go-redsync/redsync/v4"
 	redsyncredis "github.com/go-redsync/redsync/v4/redis"
 	"github.com/gomodule/redigo/redis"
-	"github.com/indece-official/go-gousu/gousu"
-	"github.com/indece-official/go-gousu/gousu/logger"
+	"github.com/indece-official/go-gousu/v2/gousu"
+	"github.com/indece-official/go-gousu/v2/gousu/logger"
 	"github.com/mna/redisc"
 	"github.com/namsral/flag"
 )

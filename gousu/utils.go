@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/indece-official/go-gousu/gousu/logger"
+	"github.com/indece-official/go-gousu/v2/gousu/logger"
 )
 
 var logFatalf = log.Fatalf

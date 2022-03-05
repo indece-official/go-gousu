@@ -3,7 +3,7 @@ package gousupostgres
 import (
 	"testing"
 
-	"github.com/indece-official/go-gousu/gousu"
+	"github.com/indece-official/go-gousu/v2/gousu"
 	"github.com/stretchr/testify/assert"
 )
 

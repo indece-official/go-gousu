@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/indece-official/go-gousu/gousu"
-	"github.com/indece-official/go-gousu/gousu/logger"
+	"github.com/indece-official/go-gousu/v2/gousu"
+	"github.com/indece-official/go-gousu/v2/gousu/logger"
 	"github.com/namsral/flag"
 
 	// Use postgres driver for database/sql

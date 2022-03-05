@@ -3,7 +3,7 @@ package gousupostgres
 import (
 	"database/sql"
 
-	"github.com/indece-official/go-gousu/gousu"
+	"github.com/indece-official/go-gousu/v2/gousu"
 )
 
 // MockService for simply mocking IService

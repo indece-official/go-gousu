@@ -1,4 +1,4 @@
-module github.com/indece-official/go-gousu/v2/gousupostgres
+module github.com/indece-official/go-gousu/gousupostgres/v2
 
 go 1.17
 

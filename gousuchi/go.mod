@@ -1,4 +1,4 @@
-module github.com/indece-official/go-gousu/v2/gousuchi
+module github.com/indece-official/go-gousu/gousuchi/v2
 
 go 1.17
 

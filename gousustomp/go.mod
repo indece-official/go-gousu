@@ -1,4 +1,4 @@
-module github.com/indece-official/go-gousu/v2/gousustomp
+module github.com/indece-official/go-gousu/gousustomp/v2
 
 go 1.17
 

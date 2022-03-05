@@ -1,4 +1,4 @@
-module github.com/indece-official/go-gousu/v2/gousuredis
+module github.com/indece-official/go-gousu/gousuredis/v2
 
 go 1.17
 

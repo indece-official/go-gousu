@@ -1,4 +1,4 @@
-module github.com/indece-official/go-gousu/v2/gousujwt
+module github.com/indece-official/go-gousu/gousujwtv2/
 
 go 1.17
 

@@ -3,10 +3,12 @@ package gousujwt
 import (
 	"crypto/ecdsa"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
+	"time"
 
+	"github.com/MicahParks/keyfunc"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/indece-official/go-gousu/v2/gousu"
 	"github.com/indece-official/go-gousu/v2/gousu/logger"
@@ -15,6 +17,11 @@ import (
 )
 
 var (
+	jwksURL                     = flag.String("jwks_url", "", "JWKS-URL for Verifier")
+	jwksRefreshInterval         = flag.Int("jwks_refresh_interval", 3600, "Interval for JWKS-Refresh [s]")
+	jwksRefreshRateLimit        = flag.Int("jwks_refresh_rate_limit", 300, "Rate-Limit for JWKS-Refresh [s]")
+	jwksRefreshTimeout          = flag.Int("jwks_refresh_timeout", 10, "Timeout for JWKS-Refresh [s]")
+	jwksRefreshUnknownKID       = flag.Bool("jwks_refresh_unknown_kid", true, "Do JWKS-Refresh for unknown KID")
 	jwtPublicKeyFile            = flag.String("jwt_publickey", "", "JWT-Public-Key for Verifier")
 	jwtVerifyAudience           = flag.String("jwt_verify_audience", "", "JWT-Audience for Verifier")
 	jwtVerifyAlgorithm          = flag.String("jwt_verify_algorithm", "", "JWT-Algorithm for Verifier")
@@ -30,10 +37,12 @@ type IVerifier interface {
 // JWTVerifier provides a simple JWT verification utility
 //
 // Used flags:
-//   * jwt_publickey Filename of JWT-Public-Key-File ()
+//   - jwt_publickey Filename of JWT-Public-Key-File ()
 type Verifier struct {
 	log       *logger.Log
 	publicKey *ecdsa.PublicKey
+	jwks      *keyfunc.JWKS
+	keyFunc   jwt.Keyfunc
 }
 
 var _ IVerifier = (*Verifier)(nil)
@@ -73,16 +82,45 @@ var _ ICustomClaims = (*CustomClaims)(nil)
 func (j *Verifier) load() error {
 	var err error
 
-	j.log.Infof("Using certificate %s for JWT verification", *jwtPublicKeyFile)
+	if *jwtPublicKeyFile != "" {
+		j.log.Infof("Using certificate %s for JWT verification", *jwtPublicKeyFile)
 
-	publicKeyPem, err := ioutil.ReadFile(*jwtPublicKeyFile)
-	if err != nil {
-		return err
-	}
+		publicKeyPem, err := os.ReadFile(*jwtPublicKeyFile)
+		if err != nil {
+			return err
+		}
 
-	j.publicKey, err = jwt.ParseECPublicKeyFromPEM(publicKeyPem)
-	if err != nil {
-		return err
+		j.publicKey, err = jwt.ParseECPublicKeyFromPEM(publicKeyPem)
+		if err != nil {
+			return err
+		}
+
+		j.keyFunc = func(token *jwt.Token) (interface{}, error) {
+			// since we only use the one private key to sign the tokens,
+			// we also only use its public counter part to verify
+			return j.publicKey, nil
+		}
+	} else if *jwksURL != "" {
+		j.log.Infof("Using jwks from %s for JWT verification", *jwksURL)
+
+		jwksOptions := keyfunc.Options{
+			RefreshErrorHandler: func(err error) {
+				j.log.Errorf("Error loading jwks certificates: %s", err)
+			},
+			RefreshInterval:   time.Second * time.Duration(*jwksRefreshInterval),
+			RefreshRateLimit:  time.Second * time.Duration(*jwksRefreshRateLimit),
+			RefreshTimeout:    time.Second * time.Duration(*jwksRefreshTimeout),
+			RefreshUnknownKID: *jwksRefreshUnknownKID,
+		}
+
+		j.jwks, err = keyfunc.Get(*jwksURL, jwksOptions)
+		if err != nil {
+			return err
+		}
+
+		j.keyFunc = j.jwks.Keyfunc
+	} else {
+		return fmt.Errorf("neither keyfile nor jwks url specified")
 	}
 
 	return nil
@@ -125,11 +163,7 @@ func (j *Verifier) VerifyWithCustomClaims(w http.ResponseWriter, r *http.Request
 	}
 
 	// validate the token
-	token, err := jwt.ParseWithClaims(authorizationHeader[1], claims, func(token *jwt.Token) (interface{}, error) {
-		// since we only use the one private key to sign the tokens,
-		// we also only use its public counter part to verify
-		return j.publicKey, nil
-	})
+	token, err := jwt.ParseWithClaims(authorizationHeader[1], claims, j.keyFunc)
 
 	// branch out into the possible error from signing
 	switch typedErr := err.(type) {

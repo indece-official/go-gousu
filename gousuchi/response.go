@@ -75,6 +75,20 @@ func (r *Response) WithHeader(key string, value string) *Response {
 	return r
 }
 
+func (r *Response) WithHeaders(headers http.Header) *Response {
+	if r.Header == nil {
+		r.Header = http.Header{}
+	}
+
+	for key, values := range headers {
+		for _, value := range values {
+			r.Header.Add(key, value)
+		}
+	}
+
+	return r
+}
+
 func (r *Response) Write(w http.ResponseWriter) IResponse {
 	if r.responseError != nil {
 		return r.responseError

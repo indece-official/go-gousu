@@ -148,6 +148,13 @@ func (s *Service) Start() error {
 	}
 	defer conn.Close()
 
+	if s.cluster != nil {
+		err = s.cluster.Refresh()
+		if err != nil {
+			return fmt.Errorf("can't refresh redis cluster layout: %s", err)
+		}
+	}
+
 	_, err = conn.Do("PING")
 	if err != nil {
 		return fmt.Errorf("can't ping redis: %s", err)

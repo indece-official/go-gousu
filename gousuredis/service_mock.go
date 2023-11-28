@@ -6,6 +6,7 @@ import (
 	"github.com/go-redsync/redsync/v4"
 	"github.com/gomodule/redigo/redis"
 	"github.com/indece-official/go-gousu/v2/gousu"
+	"gopkg.in/guregu/null.v4"
 )
 
 // MockService for simply mocking IService
@@ -21,6 +22,7 @@ type MockService struct {
 	DelFunc                func(key string) error
 	ExistsFunc             func(key string) (bool, error)
 	ScanFunc               func(pattern string, cursor int) (int, []string, error)
+	ScanAllFunc            func(pattern string, limit null.Int) ([]string, error)
 	RPushFunc              func(key string, data []byte) (int, error)
 	LPushFunc              func(key string, data []byte) (int, error)
 	LRangeFunc             func(key string, start int, stop int) ([][]byte, error)
@@ -51,6 +53,7 @@ type MockService struct {
 	DelFuncCalled          int
 	ExistsFuncCalled       int
 	ScanFuncCalled         int
+	ScanAllFuncCalled      int
 	RPushFuncCalled        int
 	LPushFuncCalled        int
 	LRangeFuncCalled       int
@@ -138,6 +141,13 @@ func (s *MockService) Scan(pattern string, cursor int) (int, []string, error) {
 	s.ScanFuncCalled++
 
 	return s.ScanFunc(pattern, cursor)
+}
+
+// ScanAll calls ScanAllFunc and increases ScanAllFuncCalled
+func (s *MockService) ScanAll(pattern string, limit null.Int) ([]string, error) {
+	s.ScanAllFuncCalled++
+
+	return s.ScanAllFunc(pattern, limit)
 }
 
 // RPush calls RPushFunc and increases RPushFuncCalled
@@ -319,6 +329,9 @@ func NewMockService() *MockService {
 		},
 		ScanFunc: func(pattern string, cursor int) (int, []string, error) {
 			return 0, []string{}, nil
+		},
+		ScanAllFunc: func(pattern string, limit null.Int) ([]string, error) {
+			return []string{}, nil
 		},
 		RPushFunc: func(key string, data []byte) (int, error) {
 			return 0, nil

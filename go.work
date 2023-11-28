@@ -1,0 +1,12 @@
+go 1.20
+
+use ./
+use ./gousuchi
+use ./gousujwt
+use ./gousukafka
+use ./gousuldap
+use ./gousupostgres
+use ./gousuredis
+use ./goususmtp
+use ./goususqlite3
+use ./gousustomp

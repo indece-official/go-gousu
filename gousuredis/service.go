@@ -11,6 +11,7 @@ import (
 	"github.com/indece-official/go-gousu/v2/gousu/logger"
 	"github.com/mna/redisc"
 	"github.com/namsral/flag"
+	"gopkg.in/guregu/null.v4"
 )
 
 // ServiceName defines the name of redis service used for dependency injection
@@ -43,6 +44,7 @@ type IService interface {
 	Del(key string) error
 	Exists(key string) (bool, error)
 	Scan(pattern string, cursor int) (int, []string, error)
+	ScanAll(pattern string, limit null.Int) ([]string, error)
 	RPush(key string, data []byte) (int, error)
 	LPush(key string, data []byte) (int, error)
 	LRange(key string, start int, stop int) ([][]byte, error)
@@ -69,8 +71,8 @@ type IService interface {
 // Service provides a service for basic redis client functionality
 //
 // Used flags:
-//   * redis_host Hostname of redis service
-//   * redis_port Port of redis service
+//   - redis_host Hostname of redis service
+//   - redis_port Port of redis service
 type Service struct {
 	log           *logger.Log
 	pool          *redis.Pool
@@ -277,7 +279,8 @@ func (s *Service) Exists(key string) (bool, error) {
 	return exists >= 1, nil
 }
 
-// Scan scans all keys for a specific pattern and returns a list of keys
+// Scan scans keys for a specific pattern and returns a list of keys
+// Important: Running Scan(...) in a cluster can return only partial results
 func (s *Service) Scan(pattern string, cursor int) (int, []string, error) {
 	keys := make([]string, 0)
 
@@ -298,6 +301,91 @@ func (s *Service) Scan(pattern string, cursor int) (int, []string, error) {
 	}
 
 	return cursor, keys, nil
+}
+
+// ScanAll scans all keys for a specific pattern and returns a list of keys
+// Supports being run in a cluster
+// Important: The resulting list is unordered
+func (s *Service) ScanAll(pattern string, limit null.Int) ([]string, error) {
+	keyMap := map[string]bool{}
+
+	if s.cluster == nil {
+		conn, err := s.openConn(true)
+		if err != nil {
+			return nil, fmt.Errorf("can't connect to redis: %s", err)
+		}
+		defer conn.Close()
+
+		cursor := 0
+
+		for {
+			var currKeys []string
+
+			resp, err := redis.Values(conn.Do("SCAN", cursor, "MATCH", pattern))
+			if err != nil {
+				return nil, err
+			}
+
+			_, err = redis.Scan(resp, &cursor, &currKeys)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, key := range currKeys {
+				keyMap[key] = true
+
+				if limit.Valid && len(keyMap) >= int(limit.Int64) {
+					break
+				}
+			}
+
+			if cursor == 0 {
+				break
+			}
+		}
+	} else {
+		err := s.cluster.EachNode(false, func(addr string, conn redis.Conn) error {
+			cursor := 0
+
+			for {
+				var currKeys []string
+
+				resp, err := redis.Values(conn.Do("SCAN", cursor, "MATCH", pattern))
+				if err != nil {
+					return err
+				}
+
+				_, err = redis.Scan(resp, &cursor, &currKeys)
+				if err != nil {
+					return err
+				}
+
+				for _, key := range currKeys {
+					keyMap[key] = true
+
+					if limit.Valid && len(keyMap) >= int(limit.Int64) {
+						break
+					}
+				}
+
+				if cursor == 0 {
+					break
+				}
+			}
+
+			return nil
+		})
+		if err != nil {
+			return nil, fmt.Errorf("can't scan on redis cluster nodes: %s", err)
+		}
+	}
+
+	keys := []string{}
+	for key := range keyMap {
+		keys = append(keys, key)
+	}
+
+	return keys, nil
 }
 
 // RPush appends an item to a list

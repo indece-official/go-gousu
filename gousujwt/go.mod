@@ -4,7 +4,7 @@ go 1.17
 
 replace github.com/indece-official/go-gousu/v2 => ../
 
-require github.com/indece-official/go-gousu/v2 v2.0.3
+require github.com/indece-official/go-gousu/v2 v2.2.0
 
 require (
 	github.com/MicahParks/keyfunc v1.9.0

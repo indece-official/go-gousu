@@ -2,6 +2,7 @@ package gousuchi
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
@@ -21,6 +22,7 @@ type AbstractController struct {
 	log                  *logger.Log
 	server               *http.Server
 	router               chi.Router
+	tlsConfig            *tls.Config
 	host                 string
 	port                 int
 	error                error
@@ -57,6 +59,10 @@ func (c *AbstractController) UsePort(port int) {
 
 func (c *AbstractController) UseHost(host string) {
 	c.host = host
+}
+
+func (c *AbstractController) UseTlsConfig(tlsConfig *tls.Config) {
+	c.tlsConfig = tlsConfig
 }
 
 func (c *AbstractController) WithExtra(r *http.Request, key string, value interface{}) *http.Request {
@@ -123,8 +129,9 @@ func (c *AbstractController) Start() error {
 
 	go func() {
 		c.server = &http.Server{
-			Addr:    fmt.Sprintf("%s:%d", c.host, c.port),
-			Handler: c.router,
+			Addr:      fmt.Sprintf("%s:%d", c.host, c.port),
+			Handler:   c.router,
+			TLSConfig: c.tlsConfig,
 		}
 
 		err := c.server.ListenAndServe()
@@ -170,5 +177,6 @@ func NewAbstractController(
 		regexpSanitizeString: regexp.MustCompile(`[\n\t\"\']+`),
 		host:                 "",
 		port:                 0,
+		tlsConfig:            nil,
 	}
 }

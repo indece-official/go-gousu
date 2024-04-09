@@ -6,9 +6,9 @@ replace github.com/indece-official/go-gousu/v2 => ../
 
 require (
 	github.com/go-mail/mail v2.3.1+incompatible
-	github.com/indece-official/go-gousu/v2 v2.0.3
+	github.com/indece-official/go-gousu/v2 v2.2.0
 	github.com/namsral/flag v1.7.4-pre
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.9.0
 )
 
 require (

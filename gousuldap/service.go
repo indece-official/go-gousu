@@ -126,7 +126,7 @@ func (s *Service) Start() error {
 		return s.log.ErrorfX("Error parsing ldap login pattern: %s", err)
 	}
 
-	s.connect()
+	err = s.connect()
 	if err != nil {
 		return err
 	}

@@ -5,8 +5,8 @@ go 1.17
 replace github.com/indece-official/go-gousu/v2 => ../
 
 require (
-	github.com/go-stomp/stomp/v3 v3.0.5
-	github.com/indece-official/go-gousu/v2 v2.0.3
+	github.com/go-stomp/stomp/v3 v3.1.0
+	github.com/indece-official/go-gousu/v2 v2.2.0
 )
 
 require (

@@ -5,9 +5,9 @@ go 1.17
 replace github.com/indece-official/go-gousu/v2 => ../
 
 require (
-	github.com/go-chi/chi/v5 v5.0.8
-	github.com/indece-official/go-gousu/v2 v2.0.3
-	github.com/stretchr/testify v1.8.2
+	github.com/go-chi/chi/v5 v5.0.12
+	github.com/indece-official/go-gousu/v2 v2.2.0
+	github.com/stretchr/testify v1.9.0
 	gopkg.in/guregu/null.v4 v4.0.0
 )
 

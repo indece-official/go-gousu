@@ -5,10 +5,10 @@ go 1.17
 replace github.com/indece-official/go-gousu/v2 => ../
 
 require (
-	github.com/indece-official/go-gousu/v2 v2.0.3
-	github.com/lib/pq v1.10.7
+	github.com/indece-official/go-gousu/v2 v2.2.0
+	github.com/lib/pq v1.10.9
 	github.com/namsral/flag v1.7.4-pre
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.9.0
 )
 
 require (

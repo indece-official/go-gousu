@@ -136,7 +136,7 @@ func (c *AbstractController) Start() error {
 
 		var err error
 
-		if c.tlsConfig == nil {
+		if c.tlsConfig != nil {
 			err = c.server.ListenAndServeTLS("", "")
 		} else {
 			err = c.server.ListenAndServe()

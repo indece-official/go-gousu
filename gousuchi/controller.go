@@ -134,7 +134,13 @@ func (c *AbstractController) Start() error {
 			TLSConfig: c.tlsConfig,
 		}
 
-		err := c.server.ListenAndServe()
+		var err error
+
+		if c.tlsConfig == nil {
+			err = c.server.ListenAndServeTLS("", "")
+		} else {
+			err = c.server.ListenAndServe()
+		}
 		if err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
 				c.error = err

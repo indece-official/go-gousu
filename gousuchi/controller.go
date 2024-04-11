@@ -49,6 +49,21 @@ func (c *AbstractController) Wrap(clb HandlerFunction) func(w http.ResponseWrite
 	}
 }
 
+func (c *AbstractController) ApplyMinDuration(minDuration time.Duration, clb HandlerFunction) HandlerFunction {
+	return func(w http.ResponseWriter, r *http.Request) IResponse {
+		start := time.Now()
+
+		result := clb(w, r)
+
+		delay := minDuration - time.Since(start)
+		if delay > 0 {
+			time.Sleep(delay)
+		}
+
+		return result
+	}
+}
+
 func (c *AbstractController) UseRouter(router chi.Router) {
 	c.router = router
 }

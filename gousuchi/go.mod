@@ -1,6 +1,8 @@
 module github.com/indece-official/go-gousu/gousuchi/v2
 
-go 1.17
+go 1.22
+
+toolchain go1.22.4
 
 replace github.com/indece-official/go-gousu/v2 => ../
 

@@ -1,11 +1,13 @@
 module github.com/indece-official/go-gousu/gousuredis/v2
 
-go 1.17
+go 1.22
+
+toolchain go1.22.4
 
 replace github.com/indece-official/go-gousu/v2 => ../
 
 require (
-	github.com/go-redsync/redsync/v4 v4.12.1
+	github.com/go-redsync/redsync/v4 v4.13.0
 	github.com/gomodule/redigo v1.9.2
 	github.com/indece-official/go-gousu/v2 v2.2.0
 	github.com/mna/redisc v1.4.0

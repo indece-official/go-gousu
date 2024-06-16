@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gomodule/redigo/redis"
+	"gopkg.in/guregu/null.v4"
 )
 
 // XAdd adds an stream event
@@ -149,4 +150,34 @@ func (s *Service) XAck(groupName string, key string, id string) (int, error) {
 	defer conn.Close()
 
 	return redis.Int(conn.Do("XACK", key, groupName, id))
+}
+
+// XLen gets the length of a stream
+func (s *Service) XLen(key string) (int64, error) {
+	conn, err := s.openConn(true)
+	if err != nil {
+		return 0, fmt.Errorf("can't connect to redis: %s", err)
+	}
+	defer conn.Close()
+
+	return redis.Int64(conn.Do("XLEN", key))
+}
+
+type XTrimParams struct {
+	MaxLen null.Int
+}
+
+// XTrim trims a stream
+func (s *Service) XTrim(key string, params *XTrimParams) (int64, error) {
+	if !params.MaxLen.Valid {
+		return 0, fmt.Errorf("no params specified")
+	}
+
+	conn, err := s.openConn(true)
+	if err != nil {
+		return 0, fmt.Errorf("can't connect to redis: %s", err)
+	}
+	defer conn.Close()
+
+	return redis.Int64(conn.Do("XTRIM", key, "MAXLEN", params.MaxLen.Int64))
 }

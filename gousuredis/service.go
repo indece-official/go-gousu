@@ -66,6 +66,8 @@ type IService interface {
 	XGroupCreate(groupName string, key string, offset XGroupCreateOffset, mkStream bool, ignoreBusy bool) error
 	XReadGroup(groupName string, consumerName string, key string, timeout time.Duration, streamID XReadGroupStreamID) (*XEvent, error)
 	XAck(groupName string, key string, id string) (int, error)
+	XLen(key string) (int64, error)
+	XTrim(key string, params *XTrimParams) (int64, error)
 }
 
 // Service provides a service for basic redis client functionality

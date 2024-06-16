@@ -44,6 +44,8 @@ type MockService struct {
 	XGroupCreateFunc       func(groupName string, key string, offset XGroupCreateOffset, mkStream bool, ignoreBusy bool) error
 	XReadGroupFunc         func(groupName string, consumerName string, key string, timeout time.Duration, streamID XReadGroupStreamID) (*XEvent, error)
 	XAckFunc               func(groupName string, key string, id string) (int, error)
+	XLenFunc               func(key string) (int64, error)
+	XTrimFunc              func(key string, params *XTrimParams) (int64, error)
 	NewMutexFuncCalled     int
 	GetPoolFuncCalled      int
 	GetFuncCalled          int
@@ -75,6 +77,8 @@ type MockService struct {
 	XGroupCreateFuncCalled int
 	XReadGroupFuncCalled   int
 	XAckFuncCalled         int
+	XLenFuncCalled         int
+	XTrimFuncCalled        int
 }
 
 // MockService implements IService
@@ -297,6 +301,20 @@ func (s *MockService) XAck(groupName string, key string, id string) (int, error)
 	return s.XAckFunc(groupName, key, id)
 }
 
+// XLen calls XLenFunc and increases XLenFuncCalled
+func (s *MockService) XLen(key string) (int64, error) {
+	s.XLenFuncCalled++
+
+	return s.XLenFunc(key)
+}
+
+// XTrim calls XTrimFunc and increases XTrimFuncCalled
+func (s *MockService) XTrim(key string, params *XTrimParams) (int64, error) {
+	s.XTrimFuncCalled++
+
+	return s.XTrimFunc(key, params)
+}
+
 // NewMockService creates a new initialized instance of MockService
 func NewMockService() *MockService {
 	return &MockService{
@@ -394,6 +412,12 @@ func NewMockService() *MockService {
 			return nil, nil
 		},
 		XAckFunc: func(groupName string, key string, id string) (int, error) {
+			return 0, nil
+		},
+		XLenFunc: func(key string) (int64, error) {
+			return 0, nil
+		},
+		XTrimFunc: func(key string, params *XTrimParams) (int64, error) {
 			return 0, nil
 		},
 	}

@@ -193,7 +193,7 @@ func (s *Service) SendEmail(m *Email) error {
 	if s.closer == nil {
 		closer, err := s.dialer.Dial()
 		if err != nil {
-			s.error = err
+			s.error = nil
 			return err
 		}
 
@@ -227,7 +227,7 @@ func (s *Service) Ping() error {
 
 	closer, err := s.dialer.Dial()
 	if err != nil {
-		s.error = err
+		s.error = nil
 		return err
 	}
 

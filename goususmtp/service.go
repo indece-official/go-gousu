@@ -49,6 +49,7 @@ type IService interface {
 	gousu.IService
 
 	SendEmail(m *Email) error
+	Ping() error
 }
 
 // Service provides an smtp sender running in a separate thread
@@ -192,7 +193,7 @@ func (s *Service) SendEmail(m *Email) error {
 	if s.closer == nil {
 		closer, err := s.dialer.Dial()
 		if err != nil {
-			s.error = nil
+			s.error = err
 			return err
 		}
 
@@ -211,6 +212,29 @@ func (s *Service) SendEmail(m *Email) error {
 
 		return err
 	}
+
+	return nil
+}
+
+func (s *Service) Ping() error {
+	s.mutexCloser.Lock()
+	defer s.mutexCloser.Unlock()
+
+	if s.closer != nil {
+		(*s.closer).Close()
+		s.closer = nil
+	}
+
+	closer, err := s.dialer.Dial()
+	if err != nil {
+		s.error = err
+		return err
+	}
+
+	s.error = nil
+	now := time.Now()
+	s.lastSend = &now
+	s.closer = &closer
 
 	return nil
 }

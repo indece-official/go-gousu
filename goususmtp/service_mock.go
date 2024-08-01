@@ -7,7 +7,9 @@ type MockService struct {
 	gousu.MockService
 
 	SendEmailFunc       func(m *Email) error
+	PingFunc            func() error
 	SendEmailFuncCalled int
+	PingFuncCalled      int
 }
 
 // MockService implements IService
@@ -20,6 +22,13 @@ func (s *MockService) SendEmail(m *Email) error {
 	return s.SendEmailFunc(m)
 }
 
+// Ping calls PingFunc and increases PingFuncCalled
+func (s *MockService) Ping() error {
+	s.PingFuncCalled++
+
+	return s.PingFunc()
+}
+
 // NewMockService creates a new initialized instance of MockService
 func NewMockService() *MockService {
 	return &MockService{
@@ -28,10 +37,11 @@ func NewMockService() *MockService {
 				return ServiceName
 			},
 		},
-
 		SendEmailFunc: func(m *Email) error {
 			return nil
 		},
-		SendEmailFuncCalled: 0,
+		PingFunc: func() error {
+			return nil
+		},
 	}
 }

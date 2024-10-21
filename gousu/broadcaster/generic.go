@@ -2,20 +2,22 @@ package broadcaster
 
 import "sync"
 
-type Generic struct {
-	consumers      map[int64]chan interface{}
+type Generic[O comparable] struct {
+	consumers      map[int64]chan O
 	nextConsumerID int64
 	mutexConsumers sync.Mutex
-	lastValue      interface{}
+	lastValue      O
 }
 
-var _ Base = (*Generic)(nil)
+var _ Base = (*Generic[bool])(nil)
+var _ Base = (*Generic[error])(nil)
+var _ Base = (*Generic[int64])(nil)
 
-func (b *Generic) Value() interface{} {
+func (b *Generic[O]) Value() O {
 	return b.lastValue
 }
 
-func (b *Generic) Next(val interface{}) {
+func (b *Generic[O]) Next(val O) {
 	b.mutexConsumers.Lock()
 	defer b.mutexConsumers.Unlock()
 
@@ -26,14 +28,14 @@ func (b *Generic) Next(val interface{}) {
 	}
 }
 
-func (b *Generic) Subscribe() (chan interface{}, *Subscription) {
+func (b *Generic[O]) Subscribe() (chan O, *Subscription) {
 	b.mutexConsumers.Lock()
 	defer b.mutexConsumers.Unlock()
 
 	id := b.nextConsumerID
 	b.nextConsumerID++
 
-	consumer := make(chan interface{}, 1)
+	consumer := make(chan O, 1)
 
 	b.consumers[id] = consumer
 
@@ -45,7 +47,7 @@ func (b *Generic) Subscribe() (chan interface{}, *Subscription) {
 	return consumer, subscription
 }
 
-func (b *Generic) Unsubscribe(id int64) {
+func (b *Generic[O]) Unsubscribe(id int64) {
 	b.mutexConsumers.Lock()
 	defer b.mutexConsumers.Unlock()
 
@@ -56,9 +58,9 @@ func (b *Generic) Unsubscribe(id int64) {
 	delete(b.consumers, id)
 }
 
-func NewGeneric(initialValue interface{}) *Generic {
-	return &Generic{
-		consumers: map[int64]chan interface{}{},
+func NewGeneric[O comparable](initialValue O) *Generic[O] {
+	return &Generic[O]{
+		consumers: map[int64]chan O{},
 		lastValue: initialValue,
 	}
 }

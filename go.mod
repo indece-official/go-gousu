@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/chakrit/go-bunyan v0.0.0-20140303180041-5a9b5e7b1765
 	github.com/namsral/flag v1.7.4-pre
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	gopkg.in/guregu/null.v4 v4.0.0
 )
 

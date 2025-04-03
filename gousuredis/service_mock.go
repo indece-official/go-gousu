@@ -13,72 +13,74 @@ import (
 type MockService struct {
 	gousu.MockService
 
-	NewMutexFunc           func(name string, options ...redsync.Option) *redsync.Mutex
-	GetPoolFunc            func() *redis.Pool
-	GetFunc                func(key string) ([]byte, error)
-	SetFunc                func(key string, data []byte) error
-	SetNXPXFunc            func(key string, data []byte, timeoutMS int) error
-	SetPXFunc              func(key string, data []byte, timeoutMS int) error
-	DelFunc                func(key string) error
-	ExistsFunc             func(key string) (bool, error)
-	ScanFunc               func(pattern string, cursor int) (int, []string, error)
-	ScanAllFunc            func(pattern string, limit null.Int) ([]string, error)
-	RPushFunc              func(key string, data []byte) (int, error)
-	LPushFunc              func(key string, data []byte) (int, error)
-	LRangeFunc             func(key string, start int, stop int) ([][]byte, error)
-	LRemFunc               func(key string, count int, data []byte) (int, error)
-	LPopFunc               func(key string) ([]byte, error)
-	RPopFunc               func(key string) ([]byte, error)
-	BLPopFunc              func(key string, timeout int) ([]byte, error)
-	HGetFunc               func(key string, field string) ([]byte, error)
-	HSetFunc               func(key string, field string, data []byte) error
-	HScanFunc              func(key string, cursor int) (int, map[string][]byte, error)
-	HKeysFunc              func(key string) ([][]byte, error)
-	HDelFunc               func(key string, field string) error
-	HLenFunc               func(key string) (int, error)
-	LIndexFunc             func(key string, position int) ([]byte, error)
-	LLenFunc               func(key string) (int, error)
-	SubscribeFunc          func(channels []string) (chan Message, ISubscription, error)
-	PublishFunc            func(channel string, data []byte) error
-	XAddFunc               func(key string, data map[string]string) (string, error)
-	XGroupCreateFunc       func(groupName string, key string, offset XGroupCreateOffset, mkStream bool, ignoreBusy bool) error
-	XReadGroupFunc         func(groupName string, consumerName string, key string, timeout time.Duration, streamID XReadGroupStreamID) (*XEvent, error)
-	XAckFunc               func(groupName string, key string, id string) (int, error)
-	XLenFunc               func(key string) (int64, error)
-	XTrimFunc              func(key string, params *XTrimParams) (int64, error)
-	NewMutexFuncCalled     int
-	GetPoolFuncCalled      int
-	GetFuncCalled          int
-	SetFuncCalled          int
-	SetNXPXFuncCalled      int
-	SetPXFuncCalled        int
-	DelFuncCalled          int
-	ExistsFuncCalled       int
-	ScanFuncCalled         int
-	ScanAllFuncCalled      int
-	RPushFuncCalled        int
-	LPushFuncCalled        int
-	LRangeFuncCalled       int
-	LRemFuncCalled         int
-	LPopFuncCalled         int
-	RPopFuncCalled         int
-	BLPopFuncCalled        int
-	HGetFuncCalled         int
-	HSetFuncCalled         int
-	HScanFuncCalled        int
-	HKeysFuncCalled        int
-	HDelFuncCalled         int
-	HLenFuncCalled         int
-	LIndexFuncCalled       int
-	LLenFuncCalled         int
-	SubscribeFuncCalled    int
-	PublishFuncCalled      int
-	XAddFuncCalled         int
-	XGroupCreateFuncCalled int
-	XReadGroupFuncCalled   int
-	XAckFuncCalled         int
-	XLenFuncCalled         int
-	XTrimFuncCalled        int
+	NewMutexFunc            func(name string, options ...redsync.Option) *redsync.Mutex
+	GetPoolFunc             func() *redis.Pool
+	GetFunc                 func(key string) ([]byte, error)
+	SetFunc                 func(key string, data []byte) error
+	SetNXPXFunc             func(key string, data []byte, timeoutMS int) error
+	SetPXFunc               func(key string, data []byte, timeoutMS int) error
+	DelFunc                 func(key string) error
+	ExistsFunc              func(key string) (bool, error)
+	ScanFunc                func(pattern string, cursor int) (int, []string, error)
+	ScanAllFunc             func(pattern string, limit null.Int) ([]string, error)
+	RPushFunc               func(key string, data []byte) (int, error)
+	LPushFunc               func(key string, data []byte) (int, error)
+	LRangeFunc              func(key string, start int, stop int) ([][]byte, error)
+	LRemFunc                func(key string, count int, data []byte) (int, error)
+	LPopFunc                func(key string) ([]byte, error)
+	RPopFunc                func(key string) ([]byte, error)
+	BLPopFunc               func(key string, timeout int) ([]byte, error)
+	HGetFunc                func(key string, field string) ([]byte, error)
+	HSetFunc                func(key string, field string, data []byte) error
+	HScanFunc               func(key string, cursor int) (int, map[string][]byte, error)
+	HKeysFunc               func(key string) ([][]byte, error)
+	HDelFunc                func(key string, field string) error
+	HLenFunc                func(key string) (int, error)
+	LIndexFunc              func(key string, position int) ([]byte, error)
+	LLenFunc                func(key string) (int, error)
+	SubscribeFunc           func(channels []string) (chan Message, ISubscription, error)
+	PublishFunc             func(channel string, data []byte) error
+	XAddFunc                func(key string, data map[string]string) (string, error)
+	XGroupCreateFunc        func(groupName string, key string, offset XGroupCreateOffset, mkStream bool, ignoreBusy bool) error
+	XGroupDestroyFunc       func(groupName string, key string) error
+	XReadGroupFunc          func(groupName string, consumerName string, key string, timeout time.Duration, streamID XReadGroupStreamID) (*XEvent, error)
+	XAckFunc                func(groupName string, key string, id string) (int, error)
+	XLenFunc                func(key string) (int64, error)
+	XTrimFunc               func(key string, params *XTrimParams) (int64, error)
+	NewMutexFuncCalled      int
+	GetPoolFuncCalled       int
+	GetFuncCalled           int
+	SetFuncCalled           int
+	SetNXPXFuncCalled       int
+	SetPXFuncCalled         int
+	DelFuncCalled           int
+	ExistsFuncCalled        int
+	ScanFuncCalled          int
+	ScanAllFuncCalled       int
+	RPushFuncCalled         int
+	LPushFuncCalled         int
+	LRangeFuncCalled        int
+	LRemFuncCalled          int
+	LPopFuncCalled          int
+	RPopFuncCalled          int
+	BLPopFuncCalled         int
+	HGetFuncCalled          int
+	HSetFuncCalled          int
+	HScanFuncCalled         int
+	HKeysFuncCalled         int
+	HDelFuncCalled          int
+	HLenFuncCalled          int
+	LIndexFuncCalled        int
+	LLenFuncCalled          int
+	SubscribeFuncCalled     int
+	PublishFuncCalled       int
+	XAddFuncCalled          int
+	XGroupCreateFuncCalled  int
+	XGroupDestroyFuncCalled int
+	XReadGroupFuncCalled    int
+	XAckFuncCalled          int
+	XLenFuncCalled          int
+	XTrimFuncCalled         int
 }
 
 // MockService implements IService
@@ -287,6 +289,13 @@ func (s *MockService) XGroupCreate(groupName string, key string, offset XGroupCr
 	return s.XGroupCreateFunc(groupName, key, offset, mkStream, ignoreBusy)
 }
 
+// XGroupDestroy calls XGroupDestroyFunc and increases XGroupDestroyFuncCalled
+func (s *MockService) XGroupDestroy(groupName string, key string) error {
+	s.XGroupDestroyFuncCalled++
+
+	return s.XGroupDestroyFunc(groupName, key)
+}
+
 // XReadGroup calls XReadGroupFunc and increases XReadGroupFuncCalled
 func (s *MockService) XReadGroup(groupName string, consumerName string, key string, timeout time.Duration, streamID XReadGroupStreamID) (*XEvent, error) {
 	s.XReadGroupFuncCalled++
@@ -406,6 +415,9 @@ func NewMockService() *MockService {
 			return "", nil
 		},
 		XGroupCreateFunc: func(groupName string, key string, offset XGroupCreateOffset, mkStream bool, ignoreBusy bool) error {
+			return nil
+		},
+		XGroupDestroyFunc: func(groupName string, key string) error {
 			return nil
 		},
 		XReadGroupFunc: func(groupName string, consumerName string, key string, timeout time.Duration, streamID XReadGroupStreamID) (*XEvent, error) {

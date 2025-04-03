@@ -90,7 +90,7 @@ func (s *Service) XReadGroup(groupName string, consumerName string, key string, 
 		return nil, err
 	}
 
-	if result == nil || len(result) < 1 || result[0] == nil {
+	if len(result) < 1 || result[0] == nil {
 		return nil, ErrNil
 	}
 
@@ -180,4 +180,16 @@ func (s *Service) XTrim(key string, params *XTrimParams) (int64, error) {
 	defer conn.Close()
 
 	return redis.Int64(conn.Do("XTRIM", key, "MAXLEN", params.MaxLen.Int64))
+}
+
+// XGroupDestroy destroys an stream consumer
+func (s *Service) XGroupDestroy(groupName string, key string) error {
+	conn, err := s.openConn(true)
+	if err != nil {
+		return fmt.Errorf("can't connect to redis: %s", err)
+	}
+	defer conn.Close()
+
+	_, err = conn.Do("XGROUP", key, groupName)
+	return err
 }

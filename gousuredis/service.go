@@ -64,6 +64,7 @@ type IService interface {
 	Publish(channel string, data []byte) error
 	XAdd(key string, data map[string]string) (string, error)
 	XGroupCreate(groupName string, key string, offset XGroupCreateOffset, mkStream bool, ignoreBusy bool) error
+	XGroupDestroy(groupName string, key string) error
 	XReadGroup(groupName string, consumerName string, key string, timeout time.Duration, streamID XReadGroupStreamID) (*XEvent, error)
 	XAck(groupName string, key string, id string) (int, error)
 	XLen(key string) (int64, error)
